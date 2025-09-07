@@ -1,0 +1,10 @@
+services:
+  b3tradingfrontend:
+    image: b3tradingfrontend
+    build:
+      context: frontend
+      dockerfile: ./Dockerfile
+    environment:
+      NODE_ENV: production
+    ports:
+      - 3000:3000
