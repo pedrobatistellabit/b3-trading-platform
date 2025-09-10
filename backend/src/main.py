@@ -174,7 +174,76 @@ async def websocket_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         manager.disconnect(websocket)
 
-# Simulação de Expert Advisor
+# Endpoints MT5 Expert Advisor
+@app.post("/api/v1/mt5/market-data")
+async def receive_mt5_market_data(market_data: dict):
+    """Receber dados de mercado do MT5 EA"""
+    logger.info(f"Dados de mercado recebidos do MT5: {market_data}")
+    
+    # Broadcast dados para conexões WebSocket
+    await manager.broadcast(json.dumps({
+        "type": "mt5_market_data",
+        "data": market_data
+    }))
+    
+    return {"status": "received", "message": "Dados de mercado processados"}
+
+@app.get("/api/v1/mt5/signals")
+async def get_mt5_signals(symbol: str = "WINFUT"):
+    """Fornecer sinais de trading para MT5 EA"""
+    # Simulação simples de sinal baseado em variação de preço
+    current_tick = market_simulator.get_tick(symbol)
+    
+    if current_tick and current_tick.get("change", 0) > 0.3:
+        signal = {
+            "action": "BUY",
+            "symbol": symbol,
+            "confidence": 0.75,
+            "timestamp": datetime.now().isoformat()
+        }
+    elif current_tick and current_tick.get("change", 0) < -0.3:
+        signal = {
+            "action": "SELL", 
+            "symbol": symbol,
+            "confidence": 0.75,
+            "timestamp": datetime.now().isoformat()
+        }
+    else:
+        signal = {
+            "action": "HOLD",
+            "symbol": symbol,
+            "confidence": 0.5,
+            "timestamp": datetime.now().isoformat()
+        }
+    
+    return signal
+
+@app.post("/api/v1/mt5/trades")
+async def receive_mt5_trade(trade_data: dict):
+    """Receber confirmação de trades executados no MT5"""
+    logger.info(f"Trade executado no MT5: {trade_data}")
+    
+    # Broadcast trade para conexões WebSocket
+    await manager.broadcast(json.dumps({
+        "type": "mt5_trade_executed",
+        "data": trade_data
+    }))
+    
+    return {"status": "received", "message": "Trade registrado"}
+
+@app.post("/api/v1/mt5/status")
+async def receive_mt5_status(status_data: dict):
+    """Receber status do MT5 EA"""
+    logger.info(f"Status do MT5 EA: {status_data}")
+    
+    # Broadcast status para conexões WebSocket
+    await manager.broadcast(json.dumps({
+        "type": "mt5_status",
+        "data": status_data
+    }))
+    
+    return {"status": "received", "message": "Status atualizado"}
+
 @app.post("/api/v1/mt5/signal")
 async def receive_mt5_signal(signal_data: dict):
     logger.info(f"Sinal recebido do MT5: {signal_data}")
