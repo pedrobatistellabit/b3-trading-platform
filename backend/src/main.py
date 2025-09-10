@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
