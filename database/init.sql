@@ -154,6 +154,9 @@ CREATE TRIGGER update_accounts_updated_at BEFORE UPDATE ON trading.accounts FOR 
 CREATE TRIGGER update_orders_updated_at BEFORE UPDATE ON trading.orders FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_positions_updated_at BEFORE UPDATE ON trading.positions FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+-- Criar usuário do banco de dados
+CREATE USER trader WITH PASSWORD 'trader123';
+
 -- Conceder permissões
 GRANT ALL PRIVILEGES ON SCHEMA trading TO trader;
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA trading TO trader;
