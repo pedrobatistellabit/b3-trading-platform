@@ -6,9 +6,15 @@ import json
 import random
 from datetime import datetime
 import logging
+import os
+from dotenv import load_dotenv
+
+# Carregar variáveis de ambiente
+load_dotenv()
 
 # Configurar logging
-logging.basicConfig(level=logging.INFO)
+log_level = os.getenv('LOG_LEVEL', 'INFO')
+logging.basicConfig(level=getattr(logging, log_level))
 logger = logging.getLogger(__name__)
 
 app = FastAPI(
@@ -191,4 +197,7 @@ async def receive_mt5_signal(signal_data: dict):
     return {"status": "signal_received", "message": "Sinal processado"}
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    host = os.getenv('API_HOST', '0.0.0.0')
+    port = int(os.getenv('API_PORT', 8000))
+    workers = int(os.getenv('API_WORKERS', 1))
+    uvicorn.run(app, host=host, port=port, workers=workers)
