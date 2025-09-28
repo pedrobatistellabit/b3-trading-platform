@@ -1,0 +1,20 @@
+# Docker Compose override for CI/CD with pre-built images
+# This file can be used with: docker-compose -f docker-compose.yml -f docker-compose.ci.yml up
+
+version: '3.8'
+
+services:
+  # Backend FastAPI - use pre-built image
+  api:
+    image: ghcr.io/pedrobatistellabit/b3-trading-platform-backend:latest
+    build: {}  # Override build context to use image instead
+
+  # Frontend Next.js - use pre-built image  
+  web:
+    image: ghcr.io/pedrobatistellabit/b3-trading-platform-frontend:latest
+    build: {}  # Override build context to use image instead
+
+  # Market Data Simulator - use pre-built image
+  market-data:
+    image: ghcr.io/pedrobatistellabit/b3-trading-platform-market-data:latest
+    build: {}  # Override build context to use image instead
