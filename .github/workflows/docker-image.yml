@@ -1,5 +1,9 @@
 name: Docker Image CI
 
+# This workflow builds Docker images for all services in the B3 Trading Platform
+# It runs on push to main and on pull requests to main branch
+# Implements solution for issue #12 - proper multi-service Docker builds
+
 on:
   push:
     branches: [ "main" ]
