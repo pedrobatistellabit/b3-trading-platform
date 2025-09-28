@@ -36,6 +36,26 @@ The workflow builds and publishes the following images to `ghcr.io`:
    - `ghcr.io/pedrobatistellabit/b3-trading-platform-frontend:latest`
    - `ghcr.io/pedrobatistellabit/b3-trading-platform-market-data:latest`
 
+#### Workflow Details
+
+The GitHub Actions workflow (`.github/workflows/docker-build.yml`) consists of four main jobs:
+
+1. **build-and-test**: Validates all service Dockerfiles by building them (no push)
+2. **build-main-services**: Builds service images from the root multi-stage Dockerfile
+3. **build-individual-services**: Builds standalone service images from individual Dockerfiles  
+4. **build-main-image**: Builds the main application image (defaults to backend service)
+
+**Permissions**: The workflow has `packages: write` permission to push to GitHub Packages using the built-in `GITHUB_TOKEN`.
+
+#### GitHub Packages Registry
+
+All images are published to the GitHub Container Registry at `ghcr.io`. No additional secrets or configuration are required - the workflow uses the default `GITHUB_TOKEN` with the necessary permissions.
+
+To pull images, you may need to authenticate:
+```bash
+echo $GITHUB_TOKEN | docker login ghcr.io -u USERNAME --password-stdin
+```
+
 #### Image Tagging
 Images are tagged with:
 - `latest` (for main branch)

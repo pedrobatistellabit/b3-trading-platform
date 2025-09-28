@@ -2,14 +2,14 @@
 # This Dockerfile can build different services based on target stage
 
 # Base Python image for backend services
-FROM python:3.11-slim as python-base
+FROM python:3.11-slim AS python-base
 RUN apt-get update && apt-get install -y \
     gcc \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Backend build stage
-FROM python-base as backend
+FROM python-base AS backend
 WORKDIR /app
 COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
@@ -20,7 +20,7 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
 
 # Frontend build stage
-FROM node:lts-alpine as frontend
+FROM node:lts-alpine AS frontend
 ENV NODE_ENV=production
 WORKDIR /usr/src/app
 COPY frontend/package*.json ./
@@ -32,7 +32,7 @@ USER node
 CMD ["npm", "start"]
 
 # Market data service build stage  
-FROM python-base as market-data
+FROM python-base AS market-data
 WORKDIR /app
 COPY services/market-data/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
@@ -40,4 +40,4 @@ COPY services/market-data/ .
 CMD ["python", "main.py"]
 
 # Default stage (backend)
-FROM backend as default
+FROM backend AS default
