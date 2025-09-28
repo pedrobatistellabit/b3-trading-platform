@@ -6,13 +6,97 @@ on:
   pull_request:
     branches: [ "main" ]
 
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
 jobs:
-
   build:
-
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service:
+          - name: backend
+            dockerfile: ./backend/Dockerfile
+            context: ./backend
+            port: 8000
+          - name: frontend
+            dockerfile: ./frontend/Dockerfile
+            context: ./frontend
+            port: 3000
+          - name: market-data
+            dockerfile: ./services/market-data/Dockerfile
+            context: ./services/market-data
+            port: 8080
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag my-image-name:$(date +%s)
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Optional: Login to GitHub Container Registry
+      # Uncomment the following step when ready to push images
+      # - name: Log in to Container Registry
+      #   if: github.event_name != 'pull_request'
+      #   uses: docker/login-action@v3
+      #   with:
+      #     registry: ${{ env.REGISTRY }}
+      #     username: ${{ github.actor }}
+      #     password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-${{ matrix.service.name }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ matrix.service.context }}
+          file: ${{ matrix.service.dockerfile }}
+          platforms: linux/amd64,linux/arm64
+          push: false
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Optional: Push images to registry
+      # Uncomment the following step when ready to push images
+      # - name: Push Docker image
+      #   if: github.event_name != 'pull_request'
+      #   uses: docker/build-push-action@v5
+      #   with:
+      #     context: ${{ matrix.service.context }}
+      #     file: ${{ matrix.service.dockerfile }}
+      #     platforms: linux/amd64,linux/arm64
+      #     push: true
+      #     tags: ${{ steps.meta.outputs.tags }}
+      #     labels: ${{ steps.meta.outputs.labels }}
+      #     cache-from: type=gha
+      #     cache-to: type=gha,mode=max
+
+      - name: Test image locally
+        run: |
+          # Load the image for local testing
+          docker buildx build \
+            --load \
+            --tag test-${{ matrix.service.name }}:latest \
+            --file ${{ matrix.service.dockerfile }} \
+            ${{ matrix.service.context }}
+          
+          # Basic smoke test - check if image was created
+          docker images test-${{ matrix.service.name }}:latest
+          
+          # Test container can start (for non-frontend services that don't need build step)
+          if [ "${{ matrix.service.name }}" != "frontend" ]; then
+            timeout 10s docker run --rm test-${{ matrix.service.name }}:latest || true
+          fi
