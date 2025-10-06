@@ -3,6 +3,10 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 
+// Get API URL from environment variable, fallback to localhost for development
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+const WS_URL = API_URL.replace('http', 'ws')
+
 interface MarketData {
   symbol: string
   price: number
@@ -27,7 +31,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     // Conectar WebSocket
-    const ws = new WebSocket('ws://localhost:8000/ws')
+    const ws = new WebSocket(`${WS_URL}/ws`)
     
     ws.onopen = () => {
       setIsConnected(true)
@@ -60,8 +64,8 @@ export default function Dashboard() {
   const loadInitialData = async () => {
     try {
       const [positionsRes, accountRes] = await Promise.all([
-        axios.get('http://localhost:8000/api/v1/positions'),
-        axios.get('http://localhost:8000/api/v1/account')
+        axios.get(`${API_URL}/api/v1/positions`),
+        axios.get(`${API_URL}/api/v1/account`)
       ])
       
       setPositions(positionsRes.data)
@@ -73,7 +77,7 @@ export default function Dashboard() {
 
   const executeTrade = async (symbol: string, side: string) => {
     try {
-      const response = await axios.post('http://localhost:8000/api/v1/trade', {
+      const response = await axios.post(`${API_URL}/api/v1/trade`, {
         symbol,
         side,
         quantity: 1
