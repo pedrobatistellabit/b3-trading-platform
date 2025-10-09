@@ -1,2 +1,14 @@
 messages: []
 model: openai/gpt-4o
+testData: []
+evaluators:
+  - name: Groundedness
+    uses: github/groundedness
+  - name: Relevance
+    uses: github/relevance
+  - name: Fluency
+    uses: github/fluency
+  - name: Similarity
+    uses: github/similarity
+  - name: Coherence
+    uses: github/coherence
